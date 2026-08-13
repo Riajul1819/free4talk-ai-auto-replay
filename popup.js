@@ -1,3 +1,4 @@
+// Free4Talk AI - Popup UI Controller Script (v4.1.0)
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
