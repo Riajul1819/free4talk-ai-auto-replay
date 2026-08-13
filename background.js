@@ -1,5 +1,5 @@
 /* ============================================================================
- * Free4Talk AI Bot — Auto Reply Pro
+ * Free4Talk AI Bot — Auto Reply Pro (v4.1.0)
  * Background service worker
  *
  * Provider routing:
