@@ -1,4 +1,4 @@
-# ⚡ Free4Talk AI Assistant - Free4Talk Bot & Auto Replay Chat Extension (v3.1.0)
+# ⚡ Free4Talk AI Assistant - Free4Talk Bot & Auto Replay Chat Extension (v4.1.0)
 
 [![Open Source Love](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](https://github.com/MdRiajulHasanRokon/free4talk-ai-auto-replay)
 [![Security Privacy](https://img.shields.io/badge/Security-Client--Side%20Direct%20API-blue.svg)](#-why-this-extension-is-the-most-secure)
@@ -105,6 +105,23 @@ Unlike third-party extension bots that route your messages and API keys through 
 This extension is built for the community at **[free4talk.com](https://www.free4talk.com)** — the premier global online language exchange community.
 
 * Official Website: [https://www.free4talk.com](https://www.free4talk.com)
+
+## 📁 Project Structure & File Overview
+
+| File / Directory | Description |
+| :--- | :--- |
+| **`icons/`** | Contains toolbar and browser UI icon assets (16px – 128px). |
+| **`LICENSE`** | MIT License specifying terms of use. |
+| **`README.md`** | Project documentation, setup guide, and feature highlights. |
+| **`background.js`** | Background Service Worker handling API calls, AI failover, and messaging. |
+| **`content.js`** | Injected script observing chat DOM & automating replies on `free4talk.com`. |
+| **`manifest.json`** | Extension Manifest V3 declaring permissions, scripts, and endpoints. |
+| **`memory.css`** | Glassmorphic dark styling for the Memory Manager interface. |
+| **`memory.html`** | Structure for managing bot memory & saved context. |
+| **`memory.js`** | Logic for viewing, searching, and deleting stored AI memories. |
+| **`popup.css`** | Styling for the main browser popup window. |
+| **`popup.html`** | Markup for the popup configuration panel. |
+| **`popup.js`** | Handles API key settings, AI model selection, and auto-reply toggles. |
 
 ---
 
