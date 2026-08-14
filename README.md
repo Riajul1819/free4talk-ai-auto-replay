@@ -1,4 +1,4 @@
-# ⚡ Free4Talk AI Assistant - Free4Talk Bot & Auto Replay Chat Extension (v4.1.0)
+# ⚡ Free4Talk AI Assistant - Free4Talk Bot & Auto Replay Chat Extension (v4.1.1)
 
 [![Open Source Love](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](https://github.com/MdRiajulHasanRokon/free4talk-ai-auto-replay)
 [![Security Privacy](https://img.shields.io/badge/Security-Client--Side%20Direct%20API-blue.svg)](#-why-this-extension-is-the-most-secure)

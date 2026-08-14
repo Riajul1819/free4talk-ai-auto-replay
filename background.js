@@ -1,11 +1,11 @@
 /* ============================================================================
- * Free4Talk AI Bot — Auto Reply Pro (v4.1.0)
+ * Free4Talk AI Bot — Auto Reply Pro (v4.1.1)
  * Background service worker
  *
  * Provider routing:
- *   - ChatGPT (gpt-5.6-mini)    → ultra fast / cheap replies
- *   - Gemini (gemini-3.6-flash) → long / detailed replies
- *   - Auto Fallback when primary provider fails
+ *   - Groq (LLaMA 3.3 70B)      → ultra-fast LPU replies
+ *   - NVIDIA NIM (Llama 3.3)    → high intelligence & long replies
+ *   - OpenRouter                → smart auto-switch fallback
  *
  * Reply-only focus + editable welcome for new users.
  * ========================================================================== */
@@ -279,9 +279,9 @@ async function loadConfig() {
   console.log("⚙️  Config loaded:", {
     enabled: cfg.botEnabled,
     autoSwitch: cfg.autoSwitch,
+    hasGroq: !!cfg.groqApiKey,
     hasNvidia: !!cfg.nvidiaApiKey,
-    hasOpenAI: !!cfg.openaiApiKey,
-    hasGemini: !!cfg.geminiApiKey,
+    hasOpenRouter: !!cfg.openrouterApiKey,
     welcome: cfg.welcomeEnabled,
   });
 }
@@ -1010,18 +1010,28 @@ function needsLongAnswer(content) {
   return false;
 }
 
+function hasAnyApiKey() {
+  return !!(
+    (cfg.groqApiKey && cfg.groqApiKey.trim()) ||
+    (cfg.nvidiaApiKey && cfg.nvidiaApiKey.trim()) ||
+    (cfg.openrouterApiKey && cfg.openrouterApiKey.trim()) ||
+    (cfg.openaiApiKey && cfg.openaiApiKey.trim()) ||
+    (cfg.geminiApiKey && cfg.geminiApiKey.trim())
+  );
+}
+
 function pickProvider(message) {
   const haveGroq = !!(cfg.groqApiKey && cfg.groqApiKey.trim());
   const haveNvidia = !!(cfg.nvidiaApiKey && cfg.nvidiaApiKey.trim());
+  const haveOpenRouter = !!(cfg.openrouterApiKey && cfg.openrouterApiKey.trim());
   const haveGemini = !!(cfg.geminiApiKey && cfg.geminiApiKey.trim());
   const haveOpenAI = !!(cfg.openaiApiKey && cfg.openaiApiKey.trim());
-  const haveOpenRouter = !!(cfg.openrouterApiKey && cfg.openrouterApiKey.trim());
 
   if (haveGroq) return "groq";
   if (haveNvidia) return "nvidia";
+  if (haveOpenRouter) return "openrouter";
   if (haveGemini) return "gemini";
   if (haveOpenAI) return "chatgpt";
-  if (haveOpenRouter) return "openrouter";
   return null;
 }
 
@@ -1091,6 +1101,9 @@ function shouldRespond(message) {
   // Chat-replies kill switch — independent from welcomeEnabled so users can
   // greet new joiners while keeping ongoing chat auto-replies silenced.
   if (cfg.chatRepliesEnabled === false) return { ok: false, reason: "chat_replies_disabled" };
+
+  // If no API key is configured, stay silent and do not attempt to reply
+  if (!hasAnyApiKey()) return { ok: false, reason: "no_api_key" };
 
   const username = message.username || "";
   const content  = (message.content || "").trim();
@@ -1177,7 +1190,7 @@ function shouldRespond(message) {
 async function generateReply(message) {
   const provider = pickProvider(message);
   if (!provider) {
-    throw new Error("No API key configured. Add Groq, NVIDIA, ChatGPT, Gemini, or OpenRouter API key in popup.");
+    throw new Error("No API key configured. Add Groq, NVIDIA, or OpenRouter API key in popup.");
   }
 
   const isLong  = cfg.autoSwitch && needsLongAnswer(message.content);
@@ -1192,17 +1205,17 @@ async function generateReply(message) {
       ? await callGroq(messages, maxTok)
       : provider === "nvidia"
       ? await callNvidia(messages, maxTok)
-      : provider === "gemini"
-      ? await callGemini(messages, maxTok)
       : provider === "openrouter"
       ? await callOpenRouter(messages, maxTok)
+      : provider === "gemini"
+      ? await callGemini(messages, maxTok)
       : await callChatGPT(messages, maxTok);
   } catch (err) {
     const fallback = provider !== "groq" && cfg.groqApiKey ? "groq"
                     : provider !== "nvidia" && cfg.nvidiaApiKey ? "nvidia"
+                    : provider !== "openrouter" && cfg.openrouterApiKey ? "openrouter"
                     : provider !== "gemini" && cfg.geminiApiKey ? "gemini"
                     : provider !== "chatgpt" && cfg.openaiApiKey ? "chatgpt"
-                    : provider !== "openrouter" && cfg.openrouterApiKey ? "openrouter"
                     : null;
     if (fallback) {
       console.warn(`⚠️ ${provider} failed (${err.message}); falling back to ${fallback}`);
@@ -1210,10 +1223,10 @@ async function generateReply(message) {
         ? await callGroq(messages, maxTok)
         : fallback === "nvidia"
         ? await callNvidia(messages, maxTok)
-        : fallback === "gemini"
-        ? await callGemini(messages, maxTok)
         : fallback === "openrouter"
         ? await callOpenRouter(messages, maxTok)
+        : fallback === "gemini"
+        ? await callGemini(messages, maxTok)
         : await callChatGPT(messages, maxTok);
     } else {
       throw err;
@@ -1300,14 +1313,14 @@ async function buildWelcomeText(username) {
 function buildFallbackReply(message, err) {
   const name = (message?.username || "").trim();
   const prefix = cfg.mentionUserInReply && name ? `${name}, ` : "";
-  const hasKey = !!(cfg.openaiApiKey && cfg.openaiApiKey.trim()) || !!(cfg.geminiApiKey && cfg.geminiApiKey.trim());
+  const hasKey = hasAnyApiKey();
 
   if (!hasKey) {
-    return clampLen(`${prefix}Please add your ChatGPT or Gemini API key in the extension popup to enable AI replies!`, cfg.shortCharLimit);
+    return "";
   }
   const errText = (err?.message || "").toLowerCase();
   if (errText.includes("api key") || errText.includes("401") || errText.includes("403")) {
-    return clampLen(`${prefix}API key error. Please check your ChatGPT / Gemini key in popup.`, cfg.shortCharLimit);
+    return clampLen(`${prefix}API key error. Please check your API key in popup.`, cfg.shortCharLimit);
   }
   return clampLen(`${prefix}Sorry, AI service is temporarily busy. Please try again in a moment.`, cfg.shortCharLimit);
 }

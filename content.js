@@ -1,5 +1,5 @@
 /* ============================================================================
- * Free4Talk AI Bot — Content Script (v4.1.0)
+ * Free4Talk AI Bot — Content Script (v4.1.1)
  * - Detects new chat messages and join notifications
  * - Sends fast replies (textarea + send button)
  * - Reply-only focus (no reactions, no PM cancel)
