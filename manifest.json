@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Free4Talk AI",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Lightning-fast AI Free4Talk bot & auto reply chat assistant. Powered by NVIDIA NIM, Groq & OpenRouter with smart auto-switching and fallback.",
   "author": "Free4Talk AI",
 
@@ -14,8 +14,6 @@
   "host_permissions": [
     "*://www.free4talk.com/*",
     "*://free4talk.com/*",
-    "https://api.openai.com/*",
-    "https://generativelanguage.googleapis.com/*",
     "https://openrouter.ai/*",
     "https://integrate.api.nvidia.com/*",
     "https://api.groq.com/*"

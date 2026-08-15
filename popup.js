@@ -1,4 +1,4 @@
-// Free4Talk AI - Popup UI Controller Script (v4.1.1)
+// Free4Talk AI - Popup UI Controller Script (v4.2.0 Pro)
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -21650,8 +21650,6 @@
   var import_react3 = __toESM(require_react());
   var GroqIcon = () => /* @__PURE__ */ import_react3.default.createElement("img", { src: "icons/groq.png", alt: "Groq Logo", style: { width: "28px", height: "28px", borderRadius: "7px", flexShrink: 0, objectFit: "contain", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)" } });
   var NvidiaIcon = () => /* @__PURE__ */ import_react3.default.createElement("img", { src: "icons/nvidia.png", alt: "NVIDIA Logo", style: { width: "28px", height: "28px", borderRadius: "7px", flexShrink: 0, objectFit: "contain", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)" } });
-  var OpenAIIcon = () => /* @__PURE__ */ import_react3.default.createElement("img", { src: "icons/openai.png", alt: "OpenAI Logo", style: { width: "28px", height: "28px", borderRadius: "7px", background: "#ffffff", padding: "2px", flexShrink: 0, objectFit: "contain", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)" } });
-  var GeminiIcon = () => /* @__PURE__ */ import_react3.default.createElement("img", { src: "icons/gemini.png", alt: "Gemini Logo", style: { width: "28px", height: "28px", borderRadius: "7px", flexShrink: 0, objectFit: "contain", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)" } });
   var OpenRouterIcon = () => /* @__PURE__ */ import_react3.default.createElement("img", { src: "icons/openrouter.png", alt: "OpenRouter Logo", style: { width: "28px", height: "28px", borderRadius: "7px", flexShrink: 0, objectFit: "contain", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)" } });
   var ALL_ENGINES = [
     {
@@ -21862,7 +21860,7 @@
               height: "18px",
               borderRadius: "5px",
               background: curr.bg,
-              padding: curr.id === "openai" ? "1px" : "0px",
+              padding: "0px",
               objectFit: "contain",
               flexShrink: 0
             }
@@ -22768,13 +22766,9 @@
   var DEFAULTS = {
     botEnabled: true,
     chatRepliesEnabled: true,
-    openaiApiKey: "",
-    geminiApiKey: "",
     openrouterApiKey: "",
     nvidiaApiKey: "",
     groqApiKey: "",
-    openaiModel: "gpt-4o-mini",
-    geminiModel: "gemini-2.0-flash",
     nvidiaModel: "meta/llama-3.3-70b-instruct",
     groqModel: "llama-3.3-70b-versatile",
     autoSwitch: true,

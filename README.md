@@ -1,6 +1,6 @@
-# ⚡ Free4Talk AI Assistant - Free4Talk Bot & Auto Replay Chat Extension (v4.1.1)
+# ⚡ Free4Talk AI Assistant — Free4Talk Bot & Auto Reply Pro (v4.2.0 Pro)
 
-[![Open Source Love](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](https://github.com/MdRiajulHasanRokon/free4talk-ai-auto-replay)
+[![Open Source Love](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](https://github.com/Riajul1819/free4talk-ai-auto-replay)
 [![Security Privacy](https://img.shields.io/badge/Security-Client--Side%20Direct%20API-blue.svg)](#-why-this-extension-is-the-most-secure)
 [![Chrome Extension](https://img.shields.io/badge/Chrome-Manifest%20V3-orange.svg)](manifest.json)
 [![Platform](https://img.shields.io/badge/Platform-free4talk.com-purple.svg)](https://www.free4talk.com)
@@ -8,7 +8,7 @@
 
 **Free4Talk AI** is the ultimate open-source **Free4Talk bot** and **Free4Talk auto replay chat** companion. Specially engineered for language learners, conversationalists, and online chat enthusiasts on [free4talk.com](https://www.free4talk.com), this browser extension automatically responds to incoming messages in real-time using cutting-edge Large Language Models (LLMs).
 
-Powered by **NVIDIA NIM (Free Unlimited Models)**, **OpenAI ChatGPT**, **Google Gemini**, **Groq**, and **OpenRouter**, this extension brings smart multi-provider AI auto-reply capabilities directly into your [Free4Talk chat](https://www.free4talk.com) experience.
+Powered by **NVIDIA NIM (Free Unlimited Models)**, **Groq (Ultra-Fast LPU)**, and **OpenRouter**, this extension brings smart multi-provider AI auto-reply capabilities directly into your [Free4Talk chat](https://www.free4talk.com) experience.
 
 ---
 
@@ -25,10 +25,9 @@ Powered by **NVIDIA NIM (Free Unlimited Models)**, **OpenAI ChatGPT**, **Google 
 * **Hands-Free Chatting**: Perfect for practicing languages or keeping discussions alive while multitasking.
 
 ### 2. ⚡ Multi-Model AI Engine & NVIDIA NIM Integration
-* **NVIDIA NIM (Free & Unlimited)**: Access high-performance open models like Meta Llama 3, Mistral, and DeepSeek for free.
-* **OpenAI ChatGPT**: Seamless integration with GPT-4o, GPT-4o-mini, and custom endpoints.
-* **Google Gemini**: Lightning-fast responses powered by Gemini 1.5 Flash and Gemini 1.5 Pro.
-* **Groq & OpenRouter**: Leverage ultra-low latency LPU inference or aggregate hundreds of open-source models.
+* **Groq (Ultra-Fast LPU)**: Lightning-fast inference powered by LLaMA 3.3 70B for instant in-room responses.
+* **NVIDIA NIM (Free & Unlimited)**: Access high-performance models like Meta Llama 3.3 and Nemotron for free.
+* **OpenRouter**: Leverage smart auto-routing and fallback across multiple open models.
 
 ### 3. 🛡️ Smart Fallback & Auto-Switching
 * Never suffer from rate limits or server downtime! If your primary AI provider hits a quota limit or fails, Free4Talk AI automatically switches to your designated backup provider in real-time without missing a message.
@@ -49,13 +48,13 @@ Powered by **NVIDIA NIM (Free Unlimited Models)**, **OpenAI ChatGPT**, **Google 
 Unlike third-party extension bots that route your messages and API keys through private, unverified proxy servers, **Free4Talk AI is built with security and user privacy as its top priority**.
 
 ```
-[ Your Browser (free4talk.com) ] ───────── (Direct HTTPS API Call) ─────────> [ AI Provider (NVIDIA / OpenAI / Google) ]
+[ Your Browser (free4talk.com) ] ───────── (Direct HTTPS API Call) ─────────> [ AI Provider (Groq / NVIDIA / OpenRouter) ]
                                   (NO MIDDLEMAN / NO LOGGING SERVERS)
 ```
 
 ### Security & Privacy Architecture:
 * **100% Open Source**: Every single line of JavaScript code is publicly readable in this repository. You can audit, review, and compile it yourself.
-* **Direct Client-to-API Communication**: All requests are dispatched **directly** from your browser to official API endpoints (`api.nvidia.com`, `api.openai.com`, `generativelanguage.googleapis.com`). There is **zero middleman server** collecting or reading your conversations.
+* **Direct Client-to-API Communication**: All requests are dispatched **directly** from your browser to official API endpoints (`api.groq.com`, `integrate.api.nvidia.com`, `openrouter.ai`). There is **zero middleman server** collecting or reading your conversations.
 * **Local Storage Encryption**: Your secret API keys are stored locally in Chrome's isolated storage (`chrome.storage.local`). They never leave your device.
 * **Zero Telemetry / Zero Trackers**: No analytics, no session recording, and no hidden third-party tracking scripts.
 * **Strict Domain Isolation**: Content scripts are declared strictly for `*://www.free4talk.com/*` and `*://free4talk.com/*`. The extension has no access to your banking, social media, or other browsing tabs.
@@ -64,11 +63,12 @@ Unlike third-party extension bots that route your messages and API keys through 
 
 ## 🔮 Release Notes & Future Roadmap
 
-### 📦 Current Release: Version 3.1.0
-* **NVIDIA NIM Integration**: Fully updated API integration supporting modern Llama 3 & DeepSeek models.
-* **Enhanced Auto Replay Speed**: Reduced message parsing delay for immediate responses on [free4talk.com](https://www.free4talk.com).
-* **Improved UI & Memory Management**: Enhanced memory viewer modal with instant memory search and item deletion.
-* **Auto Failover**: Intelligent error recovery on HTTP 429 / 503 status codes.
+### 📦 Current Release: Version 4.2.0 Pro
+* **Focused 3-Engine Architecture**: Powered strictly by **Groq (LLaMA 3.3 70B)**, **NVIDIA NIM**, and **OpenRouter** for maximum speed and intelligence.
+* **100% Silent Error Handling**: Removed all intrusive in-room key/error prompts so the bot remains completely silent on failures without posting unwanted messages to public chat.
+* **Smart Auto-Routing & Failover**: Automatic instant fallback between Groq, NVIDIA, and OpenRouter for continuous uninterrupted chatting.
+* **Retry Backoff & Rate Limit Handling**: Resilient handling with exponential backoff on transient network or rate limit responses.
+* **Streamlined Manifest & Host Permissions**: Scoped strictly to necessary AI endpoints with no excess permissions.
 
 ### 🌟 Upcoming Future Features (Roadmap)
 * 🎙️ **Voice AI Auto Reply (Speech-to-Text & Text-to-Speech)**: Real-time audio transcription and synthetic voice auto-reply directly in Free4Talk voice channels.
@@ -81,7 +81,7 @@ Unlike third-party extension bots that route your messages and API keys through 
 ## 🛠️ How to Install in Google Chrome
 
 1. **Download the Extension**:
-   - Go to [Releases](https://github.com/MdRiajulHasanRokon/free4talk-ai-auto-replay/releases) and download `free4talk-ai-v3.1.0.zip`.
+   - Go to [Releases](https://github.com/Riajul1819/free4talk-ai-auto-replay/releases) and download `free4talk-ai-v4.2.0.zip`.
    - Extract the `.zip` archive to a folder on your computer.
 
 2. **Enable Chrome Developer Mode**:
@@ -95,7 +95,7 @@ Unlike third-party extension bots that route your messages and API keys through 
 4. **Start Using Free4Talk AI**:
    - Navigate to [free4talk.com](https://www.free4talk.com).
    - Click the Free4Talk AI extension icon in your toolbar.
-   - Enter your preferred free API key (e.g. NVIDIA NIM API key or Google Gemini key).
+   - Enter your preferred API key (e.g. Groq, NVIDIA NIM, or OpenRouter).
    - Turn on **Auto Reply** and enjoy automated conversation!
 
 ---
@@ -130,7 +130,7 @@ This extension is built for the community at **[free4talk.com](https://www.free4
 * **Frontend UI**: React 19, Vanilla CSS (Dark Glassmorphism)
 * **Build System**: esbuild
 * **Extension Standard**: Chrome Extension Manifest V3
-* **AI Providers**: NVIDIA NIM API, OpenAI REST API, Google Gemini API, Groq SDK, OpenRouter API
+* **AI Providers**: Groq API, NVIDIA NIM API, OpenRouter API
 
 ---
 

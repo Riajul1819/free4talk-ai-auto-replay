@@ -1,4 +1,4 @@
-// Free4Talk AI - Memory Manager Controller Script (v4.1.1)
+// Free4Talk AI - Memory Manager Controller Script (v4.2.0 Pro)
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;

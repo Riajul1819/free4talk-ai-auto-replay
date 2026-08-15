@@ -1,5 +1,5 @@
 /* ============================================================================
- * Free4Talk AI Bot — Auto Reply Pro (v4.1.1)
+ * Free4Talk AI Bot — Auto Reply Pro (v4.2.0 Pro)
  * Background service worker
  *
  * Provider routing:
@@ -18,14 +18,10 @@ console.log("🤖 Free4Talk AI Bot background starting…");
 // Constants
 // ---------------------------------------------------------------------------
 
-const OPENAI_ENDPOINT       = "https://api.openai.com/v1/chat/completions";
-const GEMINI_ENDPOINT_BASE  = "https://generativelanguage.googleapis.com/v1beta/models";
 const OPENROUTER_ENDPOINT   = "https://openrouter.ai/api/v1/chat/completions";
 const NVIDIA_ENDPOINT       = "https://integrate.api.nvidia.com/v1/chat/completions";
 const GROQ_ENDPOINT         = "https://api.groq.com/openai/v1/chat/completions";
 
-const DEFAULT_OPENAI_MODEL  = "gpt-4o-mini";
-const DEFAULT_GEMINI_MODEL  = "gemini-2.0-flash";
 const DEFAULT_NVIDIA_MODEL  = "meta/llama-3.3-70b-instruct";
 const DEFAULT_GROQ_MODEL    = "llama-3.3-70b-versatile";
 
@@ -85,14 +81,10 @@ const DEFAULTS = {
   botEnabled: true,
   chatRepliesEnabled: true,
 
-  openaiApiKey: "",
-  geminiApiKey: "",
   openrouterApiKey: "",
   nvidiaApiKey: "",
   groqApiKey: "",
 
-  openaiModel: DEFAULT_OPENAI_MODEL,
-  geminiModel: DEFAULT_GEMINI_MODEL,
   nvidiaModel: DEFAULT_NVIDIA_MODEL,
   groqModel: DEFAULT_GROQ_MODEL,
   autoSwitch: true,
@@ -274,8 +266,6 @@ async function loadConfig() {
       .filter(Boolean);
   }
   cfg.excludedUsernames = safeArr(cfg.excludedUsernames);
-  if (cfg.geminiModel === "gemini-2.5-flash") cfg.geminiModel = "gemini-2.0-flash";
-  if (cfg.geminiModel === "gemini-2.5-pro") cfg.geminiModel = "gemini-1.5-pro";
   console.log("⚙️  Config loaded:", {
     enabled: cfg.botEnabled,
     autoSwitch: cfg.autoSwitch,
@@ -434,13 +424,9 @@ async function refreshStrictMentionConfig() {
       "chatRepliesEnabled",
       "welcomeEnabled",
       "welcomeDelaySec",
-      "openaiApiKey",
-      "geminiApiKey",
       "openrouterApiKey",
       "nvidiaApiKey",
       "groqApiKey",
-      "openaiModel",
-      "geminiModel",
       "nvidiaModel",
       "groqModel",
       "autoSwitch",
@@ -448,13 +434,9 @@ async function refreshStrictMentionConfig() {
       "shortCharLimit",
       "longCharLimit",
     ]);
-    if (latest.openaiApiKey !== undefined) cfg.openaiApiKey = String(latest.openaiApiKey || "").trim();
-    if (latest.geminiApiKey !== undefined) cfg.geminiApiKey = String(latest.geminiApiKey || "").trim();
     if (latest.openrouterApiKey !== undefined) cfg.openrouterApiKey = String(latest.openrouterApiKey || "").trim();
     if (latest.nvidiaApiKey !== undefined) cfg.nvidiaApiKey = String(latest.nvidiaApiKey || "").trim();
     if (latest.groqApiKey !== undefined) cfg.groqApiKey = String(latest.groqApiKey || "").trim();
-    if (latest.openaiModel !== undefined) cfg.openaiModel = latest.openaiModel;
-    if (latest.geminiModel !== undefined) cfg.geminiModel = latest.geminiModel;
     if (latest.nvidiaModel !== undefined) cfg.nvidiaModel = latest.nvidiaModel;
     if (latest.groqModel !== undefined) cfg.groqModel = latest.groqModel;
     if (latest.autoSwitch !== undefined) cfg.autoSwitch = !!latest.autoSwitch;
@@ -589,206 +571,15 @@ if (chrome.alarms && chrome.alarms.onAlarm) {
 }
 
 // ---------------------------------------------------------------------------
-// AI Calls — ChatGPT (OpenAI) & Google Gemini
+// AI Provider Calls — OpenRouter, Groq & NVIDIA NIM
 // ---------------------------------------------------------------------------
-
-function getValidChatGPTModel(model) {
-  const validModels = new Set([
-    "gpt-4o",
-    "gpt-4o-mini",
-    "o3-mini",
-    "o1",
-    "o1-mini",
-    "gpt-4.5-preview",
-    "gpt-4-turbo",
-    "gpt-3.5-turbo"
-  ]);
-  if (validModels.has(model)) return model;
-  return "gpt-4o-mini";
-}
-
-function getValidGeminiModel(model) {
-  const validModels = new Set([
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-2.0-pro-exp-02-05",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-2.0-flash-thinking-exp-01-21",
-    "gemma-2-9b-it",
-    "gemma-2-27b-it",
-    "gemma-2-2b-it"
-  ]);
-  if (validModels.has(model)) return model;
-  return "gemini-2.0-flash";
-}
-
-async function callChatGPT(messages, maxTokens) {
-  if (!cfg.openaiApiKey) throw new Error("ChatGPT API key not configured");
-
-  const rawModel = cfg.openaiModel || DEFAULT_OPENAI_MODEL;
-  const model = getValidChatGPTModel(rawModel);
-  const isReasoning = /^(o1|o3)/i.test(model);
-
-  const headers = {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${cfg.openaiApiKey}`,
-  };
-
-  const body = {
-    model,
-    messages: isReasoning
-      ? messages.map((m) => (m.role === "system" ? { ...m, role: "developer" } : m))
-      : messages,
-  };
-
-  if (isReasoning) {
-    body.max_completion_tokens = maxTokens;
-  } else {
-    body.temperature = 0.7;
-    body.max_tokens = maxTokens;
-  }
-
-  let lastErr;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(OPENAI_ENDPOINT, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      if (res.status === 401 || res.status === 403) {
-        throw new Error("Invalid ChatGPT API key");
-      }
-      if (res.status === 429) {
-        if (attempt < 3) {
-          await sleep(800 * attempt);
-          continue;
-        }
-        throw new Error("ChatGPT rate limit exceeded");
-      }
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        let apiErr = "";
-        try {
-          const parsed = JSON.parse(txt);
-          apiErr = parsed?.error?.message || "";
-        } catch {}
-        throw new Error(apiErr ? `ChatGPT API Error (${res.status}): ${apiErr}` : `HTTP ${res.status} ${txt.slice(0, 200)}`);
-      }
-
-      const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content;
-      if (!text || typeof text !== "string") {
-        throw new Error("Empty response from ChatGPT model");
-      }
-      return text.trim();
-    } catch (err) {
-      lastErr = err;
-      const msg = (err?.message || "").toLowerCase();
-      if (attempt < 3 && (msg.includes("network") || msg.includes("fetch"))) {
-        await sleep(500 * attempt);
-        continue;
-      }
-      break;
-    }
-  }
-  throw lastErr || new Error("Unknown ChatGPT error");
-}
-
-async function callGemini(messages, maxTokens) {
-  if (!cfg.geminiApiKey) throw new Error("Gemini API key not configured");
-
-  const rawModel = cfg.geminiModel || DEFAULT_GEMINI_MODEL;
-  const model = getValidGeminiModel(rawModel);
-
-  const endpoint = `${GEMINI_ENDPOINT_BASE}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(cfg.geminiApiKey)}`;
-
-  const systemMsg = messages.find((m) => m.role === "system");
-  const systemInstruction = systemMsg ? { parts: [{ text: systemMsg.content }] } : undefined;
-
-  const contents = messages
-    .filter((m) => m.role !== "system")
-    .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
-  const body = {
-    contents,
-    ...(systemInstruction ? { system_instruction: systemInstruction } : {}),
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: maxTokens,
-    },
-  };
-
-  let lastErr;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (res.status === 400 || res.status === 401 || res.status === 403 || res.status === 404) {
-        const txt = await res.text().catch(() => "");
-        let apiErr = "";
-        try {
-          const parsed = JSON.parse(txt);
-          apiErr = parsed?.error?.message || "";
-        } catch {}
-        if (txt.includes("API_KEY_INVALID") || res.status === 401 || res.status === 403) {
-          throw new Error("Invalid Gemini API key");
-        }
-        throw new Error(apiErr ? `Gemini API Error (${res.status}): ${apiErr}` : `Gemini API Error ${res.status}: ${txt.slice(0, 200)}`);
-      }
-      if (res.status === 429) {
-        if (attempt < 3) {
-          await sleep(800 * attempt);
-          continue;
-        }
-        throw new Error("Gemini rate limit exceeded");
-      }
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${txt.slice(0, 200)}`);
-      }
-
-      const data = await res.json();
-      const candidate = data?.candidates?.[0];
-      if (candidate?.finishReason === "SAFETY") {
-        throw new Error("Gemini content flagged by safety filter");
-      }
-
-      const text = candidate?.content?.parts?.[0]?.text;
-      if (!text || typeof text !== "string") {
-        throw new Error("Empty response from Gemini model");
-      }
-      return text.trim();
-    } catch (err) {
-      lastErr = err;
-      const msg = (err?.message || "").toLowerCase();
-      if (attempt < 3 && (msg.includes("network") || msg.includes("fetch"))) {
-        await sleep(500 * attempt);
-        continue;
-      }
-      break;
-    }
-  }
-  throw lastErr || new Error("Unknown Gemini error");
-}
 
 async function callOpenRouter(messages, maxTokens) {
   if (!cfg.openrouterApiKey) throw new Error("OpenRouter API key not configured");
 
   const candidateModels = [
     "openrouter/auto",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-lite-preview:free"
+    "meta-llama/llama-3.3-70b-instruct:free"
   ];
   const headers = {
     "Content-Type": "application/json",
@@ -798,7 +589,8 @@ async function callOpenRouter(messages, maxTokens) {
   };
 
   let lastErr;
-  for (const model of candidateModels) {
+  for (let i = 0; i < candidateModels.length; i++) {
+    const model = candidateModels[i];
     try {
       const res = await fetch(OPENROUTER_ENDPOINT, {
         method: "POST",
@@ -829,8 +621,11 @@ async function callOpenRouter(messages, maxTokens) {
     } catch (err) {
       lastErr = err;
       const msg = (err?.message || "").toLowerCase();
-      if (attempt < 3 && (msg.includes("network") || msg.includes("fetch"))) {
-        await sleep(500 * attempt);
+      if (i < candidateModels.length - 1 && (msg.includes("network") || msg.includes("fetch"))) {
+        await sleep(500 * (i + 1));
+        continue;
+      }
+      if (i < candidateModels.length - 1) {
         continue;
       }
       break;
@@ -1014,9 +809,7 @@ function hasAnyApiKey() {
   return !!(
     (cfg.groqApiKey && cfg.groqApiKey.trim()) ||
     (cfg.nvidiaApiKey && cfg.nvidiaApiKey.trim()) ||
-    (cfg.openrouterApiKey && cfg.openrouterApiKey.trim()) ||
-    (cfg.openaiApiKey && cfg.openaiApiKey.trim()) ||
-    (cfg.geminiApiKey && cfg.geminiApiKey.trim())
+    (cfg.openrouterApiKey && cfg.openrouterApiKey.trim())
   );
 }
 
@@ -1024,14 +817,10 @@ function pickProvider(message) {
   const haveGroq = !!(cfg.groqApiKey && cfg.groqApiKey.trim());
   const haveNvidia = !!(cfg.nvidiaApiKey && cfg.nvidiaApiKey.trim());
   const haveOpenRouter = !!(cfg.openrouterApiKey && cfg.openrouterApiKey.trim());
-  const haveGemini = !!(cfg.geminiApiKey && cfg.geminiApiKey.trim());
-  const haveOpenAI = !!(cfg.openaiApiKey && cfg.openaiApiKey.trim());
 
   if (haveGroq) return "groq";
   if (haveNvidia) return "nvidia";
   if (haveOpenRouter) return "openrouter";
-  if (haveGemini) return "gemini";
-  if (haveOpenAI) return "chatgpt";
   return null;
 }
 
@@ -1205,17 +994,11 @@ async function generateReply(message) {
       ? await callGroq(messages, maxTok)
       : provider === "nvidia"
       ? await callNvidia(messages, maxTok)
-      : provider === "openrouter"
-      ? await callOpenRouter(messages, maxTok)
-      : provider === "gemini"
-      ? await callGemini(messages, maxTok)
-      : await callChatGPT(messages, maxTok);
+      : await callOpenRouter(messages, maxTok);
   } catch (err) {
     const fallback = provider !== "groq" && cfg.groqApiKey ? "groq"
                     : provider !== "nvidia" && cfg.nvidiaApiKey ? "nvidia"
                     : provider !== "openrouter" && cfg.openrouterApiKey ? "openrouter"
-                    : provider !== "gemini" && cfg.geminiApiKey ? "gemini"
-                    : provider !== "chatgpt" && cfg.openaiApiKey ? "chatgpt"
                     : null;
     if (fallback) {
       console.warn(`⚠️ ${provider} failed (${err.message}); falling back to ${fallback}`);
@@ -1223,11 +1006,7 @@ async function generateReply(message) {
         ? await callGroq(messages, maxTok)
         : fallback === "nvidia"
         ? await callNvidia(messages, maxTok)
-        : fallback === "openrouter"
-        ? await callOpenRouter(messages, maxTok)
-        : fallback === "gemini"
-        ? await callGemini(messages, maxTok)
-        : await callChatGPT(messages, maxTok);
+        : await callOpenRouter(messages, maxTok);
     } else {
       throw err;
     }
@@ -1311,18 +1090,8 @@ async function buildWelcomeText(username) {
 }
 
 function buildFallbackReply(message, err) {
-  const name = (message?.username || "").trim();
-  const prefix = cfg.mentionUserInReply && name ? `${name}, ` : "";
-  const hasKey = hasAnyApiKey();
-
-  if (!hasKey) {
-    return "";
-  }
-  const errText = (err?.message || "").toLowerCase();
-  if (errText.includes("api key") || errText.includes("401") || errText.includes("403")) {
-    return clampLen(`${prefix}API key error. Please check your API key in popup.`, cfg.shortCharLimit);
-  }
-  return clampLen(`${prefix}Sorry, AI service is temporarily busy. Please try again in a moment.`, cfg.shortCharLimit);
+  // Stay completely silent on failure — never broadcast API key warnings or error messages into the room chat
+  return "";
 }
 
 function pruneWelcomedUsers(now) {
